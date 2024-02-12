@@ -14,6 +14,13 @@ mongoose
     console.log("Connection failed!", error);
   });
 
+app.use((req, res, next) => {
+  req.user = {
+    _id: "65c99a62f47e3c78345e21ba",
+  };
+  next();
+});
+
 const routes = require("./routes");
 app.use(express.json());
 app.use(routes);
@@ -22,3 +29,7 @@ app.use("/", mainRouter);
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+module.exports.createClothingItem = (req, res) => {
+  console.log(req.user._id);
+};

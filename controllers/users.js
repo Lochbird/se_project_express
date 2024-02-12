@@ -8,7 +8,7 @@ const getUsers = (req, res) => {
     .catch((err) => {
       console.error(err);
       res.status(500).send({
-        message: err.message || "Some error occurred while retrieving users.",
+        message: err.message,
       });
       // ATTN, don't use hardcoded numbers (like 500) in your code.
       // Instead, use the built-in status codes from the http module.
@@ -30,7 +30,7 @@ const createUser = (req, res) => {
         });
       }
       return res.status(500).send({
-        message: err.message || "Some error occurred while creating the user.",
+        message: err.message,
       });
     });
 };
@@ -46,7 +46,7 @@ const getUserById = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
-        return res.status(400).send({
+        return res.status(404).send({
           message: `User not found with id ${userId}`,
         });
       }
