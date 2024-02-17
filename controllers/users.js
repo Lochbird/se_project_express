@@ -15,8 +15,6 @@ const getUsers = (req, res) => {
       res.status(500).send({
         message: err.message,
       });
-      // ATTN, don't use hardcoded numbers (like 500) in your code.
-      // Instead, use the built-in status codes from the http module.
     });
 };
 

@@ -9,8 +9,9 @@ const createItem = (req, res) => {
   console.log(req, req.body);
 
   const { name, weather, imageURL } = req.body;
+  const owner = req.user._id;
 
-  ClothingItem.create({ name, weather, imageURL })
+  ClothingItem.create({ name, weather, imageURL, owner })
     .then((item) => res.status(201).send(item))
     .catch((err) => {
       console.log(err);
@@ -30,22 +31,6 @@ const getItems = (req, res) => {
       return res
         .status(InternalServerError)
         .send({ message: "Error getting item", err });
-    });
-};
-
-const updateItem = (req, res) => {
-  const { itemId } = req.params;
-  const { imageURL } = req.body;
-  console.log({ itemId, imageURL });
-
-  ClothingItem.findByIdAndUpdate(itemId, { $set: { imageURL } })
-    .orFail()
-    .then((item) => res.status(200).send({ item }))
-    .catch((err) => {
-      console.error(err);
-      return res
-        .status(InternalServerError)
-        .send({ message: "Error updating item", err });
     });
 };
 
@@ -130,7 +115,6 @@ const dislikeItem = (req, res) => {
 module.exports = {
   createItem,
   getItems,
-  updateItem,
   deleteItem,
   likeItem,
   dislikeItem,

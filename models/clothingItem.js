@@ -17,6 +17,18 @@ const clothingItemSchema = new mongoose.Schema({
       validator: (value) => validator.isURL(value),
       message: "Invalid URL",
     },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    likes: {
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "User",
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
 });
 
