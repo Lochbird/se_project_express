@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 });
 
 const routes = require("./routes");
+
 app.use(express.json());
 app.use(routes);
 app.use("/", mainRouter);
@@ -30,6 +31,6 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports.createClothingItem = (req, res) => {
+module.exports.createClothingItem = (req) => {
   console.log(req.user._id);
 };

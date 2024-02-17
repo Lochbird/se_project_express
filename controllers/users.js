@@ -1,4 +1,9 @@
 const User = require("../models/user");
+const {
+  ValidationError,
+  NotFoundError,
+  InternalServerError,
+} = require("../utils/errors");
 
 const getUsers = (req, res) => {
   User.find({})
@@ -25,11 +30,11 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(400).send({
+        return res.status(ValidationError).send({
           message: err.message,
         });
       }
-      return res.status(500).send({
+      return res.status(InternalServerError).send({
         message: err.message,
       });
     });
@@ -46,16 +51,16 @@ const getUserById = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "DocumentNotFoundError") {
-        return res.status(404).send({
+        return res.status(NotFoundError).send({
           message: `User not found with id ${userId}`,
         });
       }
       if (err.name === "CastError") {
-        return res.status(400).send({
+        return res.status(ValidationError).send({
           message: `Invalid user id ${userId}`,
         });
       }
-      return res.status(500).send({
+      return res.status(InternalServerError).send({
         message: `Error retrieving user with id ${userId}`,
       });
     });
