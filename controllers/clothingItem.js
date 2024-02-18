@@ -90,7 +90,7 @@ const dislikeItem = (req, res) => {
 
   ClothingItem.findByIdAndUpdate(
     itemId,
-    { $pull: { likes: req.body._id } },
+    { $pull: { likes: req.user._id } },
     { new: true },
   )
     .orFail()
