@@ -6,12 +6,10 @@ const {
 } = require("../utils/errors");
 
 const createItem = (req, res) => {
-  console.log(req, req.body);
-
-  const { name, weather, imageURL } = req.body;
+  const { name, weather, imageUrl } = req.body;
   const owner = req.user._id;
 
-  ClothingItem.create({ name, weather, imageURL, owner })
+  ClothingItem.create({ name, weather, imageUrl, owner })
     .then((item) => res.status(201).send(item))
     .catch((err) => {
       console.log(err);
@@ -20,9 +18,10 @@ const createItem = (req, res) => {
       }
       return res
         .status(InternalServerError)
-        .send({ message: "Error creating item", err });
+        .send({ message: "Error creating item" });
     });
 };
+
 const getItems = (req, res) => {
   ClothingItem.find({})
     .then((item) => res.status(200).send(item))
@@ -30,16 +29,14 @@ const getItems = (req, res) => {
       console.error(err);
       return res
         .status(InternalServerError)
-        .send({ message: "Error getting item", err });
+        .send({ message: "Error getting item" });
     });
 };
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
-  const { imageURL } = req.body;
-  console.log({ itemId, imageURL });
 
-  ClothingItem.findByIdAndDelete(itemId, { $set: { imageURL } })
+  ClothingItem.findByIdAndDelete(itemId)
     .orFail()
     .then((item) => res.status(200).send({ item }))
     .catch((err) => {
@@ -56,16 +53,18 @@ const deleteItem = (req, res) => {
       }
       return res
         .status(InternalServerError)
-        .send({ message: "Error deleting item", err });
+        .send({ message: "Error deleting item" });
     });
 };
 
 const likeItem = (req, res) => {
   const { itemId } = req.params;
-  const { userId } = req.body;
-  console.log({ itemId, userId });
 
-  ClothingItem.findByIdAndUpdate(itemId, { $addToSet: { likes: userId } })
+  ClothingItem.findByIdAndUpdate(
+    itemId,
+    { $addToSet: { likes: req.user._id } },
+    { new: true },
+  )
     .orFail()
     .then((item) => res.status(200).send({ item }))
     .catch((err) => {
@@ -82,16 +81,18 @@ const likeItem = (req, res) => {
       }
       return res
         .status(InternalServerError)
-        .send({ message: "Error liking item", err });
+        .send({ message: "Error liking item" });
     });
 };
 
 const dislikeItem = (req, res) => {
   const { itemId } = req.params;
-  const { userId } = req.body;
-  console.log({ itemId, userId });
 
-  ClothingItem.findByIdAndUpdate(itemId, { $pull: { likes: userId } })
+  ClothingItem.findByIdAndUpdate(
+    itemId,
+    { $pull: { likes: req.body._id } },
+    { new: true },
+  )
     .orFail()
     .then((item) => res.status(200).send({ item }))
     .catch((err) => {
@@ -108,7 +109,7 @@ const dislikeItem = (req, res) => {
       }
       return res
         .status(InternalServerError)
-        .send({ message: "Error disliking item", err });
+        .send({ message: "Error disliking item" });
     });
 };
 

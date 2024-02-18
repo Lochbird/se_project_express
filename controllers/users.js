@@ -12,7 +12,7 @@ const getUsers = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).send({
+      res.status(InternalServerError).send({
         message: err.message,
       });
     });
