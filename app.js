@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const mainRouter = require("./routes/index");
 
 const app = express();
@@ -14,15 +15,9 @@ mongoose
     console.log("Connection failed!", error);
   });
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: "65c99a62f47e3c78345e21ba",
-  };
-  next();
-});
-
 const routes = require("./routes");
 
+app.use(cors());
 app.use(express.json());
 app.use(routes);
 app.use("/", mainRouter);
