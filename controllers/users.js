@@ -1,3 +1,6 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../utils/config");
 const User = require("../models/user");
 const {
   ValidationError,
@@ -5,7 +8,6 @@ const {
   InternalServerError,
   UnauthorizedError,
 } = require("../utils/errors");
-const bcrypt = require("bcryptjs");
 
 const getUsers = (req, res) => {
   User.find({})
@@ -48,17 +50,28 @@ const getCurrentUser = (req, res) => {
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
-  bcrypt
-    .hash(password, 10)
-    .then((hash) => {
-      User.create({ name, avatar, email, password: hash });
-    })
-    .then((user) => {
-      res.status(201).send(user);
+  const hashedPassword = bcrypt.hash(password, 10);
+  User.create({
+    name,
+    email,
+    avatar,
+    password: hashedPassword,
+  })
+    .then((newUser) => {
+      res.status(201).send({
+        name: newUser.name,
+        email: newUser.email,
+        avatar: newUser.avatar,
+      });
     })
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
+        return res.status(ValidationError).send({
+          message: err.message,
+        });
+      }
+      if (err.name === "CastError") {
         return res.status(ValidationError).send({
           message: err.message,
         });
@@ -99,13 +112,12 @@ const getUserById = (req, res) => {
 };
 
 const updateProfile = (req, res) => {
-  const { name, avatar } = req.body;
   const userId = req.user._id;
 
-  User.findByIdAndUpdate
+  User.findByIdAndUpdate(userId)
     .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      res.status(200).send({ name: user.name, avatar: user.avatar });
     })
     .catch((err) => {
       console.error(err);
@@ -128,7 +140,7 @@ const updateProfile = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  User.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
@@ -137,6 +149,11 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
+      if (err.name == "DocumentNotFoundError") {
+        return res.status(ValidationError).send({
+          message: "Invalid email or password",
+        });
+      }
       if (err.name === "UnauthorizedError") {
         return res.status(UnauthorizedError).send({
           message: "Invalid email or password",
