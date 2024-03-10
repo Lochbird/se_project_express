@@ -26,13 +26,15 @@ const getUsers = (req, res) => {
 const getCurrentUser = (req, res) => {
   const userId = req.user._id;
   User.findById(userId)
-    .orFail()
     .then((user) => {
-      res.status(200).send(user);
+      if (!user) {
+        return Promise.reject(new Error("User not found"));
+      }
+      return res.status(200).send(user);
     })
     .catch((err) => {
       console.error(err);
-      if (err.name === "DocumentNotFoundError") {
+      if (err.message === "User not found") {
         return res.status(NotFoundError).send({
           message: `User not found with id ${userId}`,
         });
@@ -91,12 +93,7 @@ const createUser = (req, res) => {
         });
       }
 
-      if (err.name === "ValidationError") {
-        return res.status(ValidationError).send({
-          message: err.message,
-        });
-      }
-      if (err.name === "CastError") {
+      if (err.name === "ValidationError" || "CastError") {
         return res.status(ValidationError).send({
           message: err.message,
         });
@@ -162,8 +159,15 @@ const updateProfile = (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  if (!email || !password) {
+    return res.status(ValidationError).send({
+      message: "Enter an email or password",
+    });
+  }
+
+  User.findUserByCredentials(email, password)
     .then((user) => {
+      console.log(user, "AAAAAAAAAAAA");
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });

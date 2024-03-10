@@ -1,8 +1,11 @@
+const clothingItem = require("../models/clothingItem");
 const ClothingItem = require("../models/clothingItem");
+const user = require("../models/user");
 const {
   ValidationError,
   NotFoundError,
   InternalServerError,
+  ForbiddenError,
 } = require("../utils/errors");
 
 const createItem = (req, res) => {
@@ -34,21 +37,22 @@ const getItems = (req, res) => {
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
-  const { _id } = req.user;
+  const userId = req.user._id;
 
   ClothingItem.findById(itemId)
     .orFail()
     .then((item) => {
-      if (item.owner.toString() !== _id) {
-        return res
-          .status(ForbiddenError)
-          .send({ message: "You are not authorized to delete this item" });
+      if (String(item.owner) !== userId) {
+        throw new Error("User not authorized to delete item");
       }
-      return ClothingItem.findByIdAndDelete(itemId);
+      return item.deleteOne();
     })
     .then(() => res.status(200).send({ message: "Item deleted" }))
     .catch((err) => {
       console.error(err);
+      if (err.message === "User not authorized to delete item") {
+        return res.status(ForbiddenError).send({ message: err.message });
+      }
       if (err.name === "CastError") {
         return res
           .status(ValidationError)
@@ -67,10 +71,13 @@ const deleteItem = (req, res) => {
 
 const likeItem = (req, res) => {
   const { itemId } = req.params;
+  const userId = req.user._id;
+  console.log(userId);
+  console.log(itemId);
 
   ClothingItem.findByIdAndUpdate(
     itemId,
-    { $addToSet: { likes: req.user._id } },
+    { $addToSet: { likes: userId } },
     { new: true },
   )
     .orFail()
