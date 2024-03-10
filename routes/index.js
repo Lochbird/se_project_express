@@ -8,8 +8,8 @@ const { validateNewUser, validateLogin } = require("../middlewares/validation");
 router.use("/items", clothingItem);
 router.use("/users", userRouter);
 
-router.post("/signin", validateLogin, login);
-router.post("/signup", validateNewUser, createUser);
+router.post("/signin", login);
+router.post("/signup", createUser);
 
 router.use((req, res) => {
   res.status(NotFoundError).send({ message: "Requested resource not found" });

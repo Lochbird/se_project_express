@@ -7,6 +7,7 @@ const {
   NotFoundError,
   InternalServerError,
   UnauthorizedError,
+  ConflictError,
 } = require("../utils/errors");
 
 const getUsers = (req, res) => {
@@ -50,22 +51,46 @@ const getCurrentUser = (req, res) => {
 const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
-  const hashedPassword = bcrypt.hash(password, 10);
-  User.create({
-    name,
-    email,
-    avatar,
-    password: hashedPassword,
-  })
-    .then((newUser) => {
+  User.findOne({ email })
+    .select("+password")
+    .then((user) => {
+      if (!email || !password) {
+        throw new Error("Enter an email or password");
+      }
+      if (user) {
+        throw new Error("This email already exists");
+      }
+      return bcrypt.hash(password, 10);
+    })
+
+    .then((hash) =>
+      User.create({
+        name,
+        email,
+        avatar,
+        password: hash,
+      }),
+    )
+    .then((user) => {
+      const userPayload = user.toObject();
+      delete userPayload.password;
       res.status(201).send({
-        name: newUser.name,
-        email: newUser.email,
-        avatar: newUser.avatar,
+        data: userPayload,
       });
     })
     .catch((err) => {
       console.error(err);
+      if (err.message === "Enter an email or password") {
+        return res.status(ValidationError).send({
+          message: err.message,
+        });
+      }
+      if (err.message === "This email already exists") {
+        return res.status(ConflictError).send({
+          message: err.message,
+        });
+      }
+
       if (err.name === "ValidationError") {
         return res.status(ValidationError).send({
           message: err.message,
@@ -75,9 +100,6 @@ const createUser = (req, res) => {
         return res.status(ValidationError).send({
           message: err.message,
         });
-      }
-      if (err.name === "MongoError" && err.code === 11000) {
-        throw new Error("Email already exists");
       }
       return res.status(InternalServerError).send({
         message: err.message,
