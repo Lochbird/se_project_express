@@ -132,14 +132,27 @@ const getUserById = (req, res) => {
 
 const updateProfile = (req, res) => {
   const userId = req.user._id;
+  const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(userId)
+  User.findByIdAndUpdate(
+    userId,
+    { name, avatar },
+    { new: true, runValidators: true },
+  )
     .orFail()
     .then((user) => {
+      if (!user) {
+        throw new Error("User not found");
+      }
       res.status(200).send({ name: user.name, avatar: user.avatar });
     })
     .catch((err) => {
       console.error(err);
+      if (err.message === "User not found") {
+        return res.status(NotFoundError).send({
+          message: `User not found with id ${userId}`,
+        });
+      }
       if (err.name === "DocumentNotFoundError") {
         throw new Error.status(NotFoundError)({
           message: `User not found with id ${userId}`,
