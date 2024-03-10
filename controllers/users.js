@@ -93,7 +93,7 @@ const createUser = (req, res) => {
         });
       }
 
-      if (err.name === "ValidationError" || "CastError") {
+      if (err.name === "ValidationError" || err.name === "CastError") {
         return res.status(ValidationError).send({
           message: err.message,
         });
@@ -168,6 +168,9 @@ const updateProfile = (req, res) => {
           message: err.message,
         });
       }
+      return res.status(InternalServerError).send({
+        message: `Error updating user with id ${userId}`,
+      });
     });
 };
 
@@ -175,21 +178,23 @@ const login = (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(ValidationError).send({
-      message: "Enter an email or password",
-    });
+    throw new Error("Enter an email or password");
   }
 
   User.findUserByCredentials(email, password)
     .then((user) => {
-      console.log(user, "AAAAAAAAAAAA");
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
-      res.status(200).send({ token });
+      return res.status(200).send({ token });
     })
     .catch((err) => {
       console.error(err);
+      if (err.message === "Enter an email or password") {
+        return res.status(ValidationError).send({
+          message: err.message,
+        });
+      }
       if (err.name === "DocumentNotFoundError") {
         return res.status(ValidationError).send({
           message: "Invalid email or password",
