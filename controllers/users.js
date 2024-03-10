@@ -154,18 +154,20 @@ const updateProfile = (req, res) => {
         });
       }
       if (err.name === "DocumentNotFoundError") {
-        throw new Error.status(NotFoundError)({
+        return res.status(NotFoundError).send({
           message: `User not found with id ${userId}`,
         });
       }
       if (err.name === "CastError") {
-        throw new Error.status(ValidationError).send({
+        return res.status(ValidationError).send({
           message: `Invalid user id ${userId}`,
         });
       }
-      throw new Error.status(InternalServerError).send({
-        message: `Error updating user with id ${userId}`,
-      });
+      if (err.name === "ValidationError") {
+        return res.status(ValidationError).send({
+          message: err.message,
+        });
+      }
     });
 };
 
@@ -188,7 +190,7 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.name == "DocumentNotFoundError") {
+      if (err.name === "DocumentNotFoundError") {
         return res.status(ValidationError).send({
           message: "Invalid email or password",
         });

@@ -42,7 +42,7 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(
     .select("+password")
     .orFail()
     .then((user) => {
-      return bcrypt.compare(password, user.password).then((matched) => {
+      bcrypt.compare(password, user.password).then((matched) => {
         if (!matched) {
           throw new Error("Incorrect email or password");
         }
