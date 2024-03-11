@@ -132,19 +132,12 @@ const getUserById = (req, res) => {
 
 const updateProfile = (req, res) => {
   const userId = req.user._id;
-  const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(
-    userId,
-    { name, avatar },
-    { new: true, runValidators: true },
-  )
+  User.findById(userId)
     .orFail()
     .then((user) => {
-      if (!user) {
-        throw new Error("User not found");
-      }
-      res.status(200).send({ name: user.name, avatar: user.avatar });
+      if (!user) throw new Error("User not found");
+      return user.save();
     })
     .catch((err) => {
       console.error(err);
@@ -176,13 +169,16 @@ const updateProfile = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
+  console.log("login", email, password);
 
   if (!email || !password) {
-    throw new Error("Enter an email or password");
+    return res.status(ValidationError).send({
+      message: "Enter an email or password",
+    });
   }
-
-  User.findUserByCredentials(email, password)
+  return User.findUserByCredentials(email, password)
     .then((user) => {
+      console.log(user);
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
@@ -190,11 +186,6 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.message === "Enter an email or password") {
-        return res.status(ValidationError).send({
-          message: err.message,
-        });
-      }
       if (err.name === "DocumentNotFoundError") {
         return res.status(ValidationError).send({
           message: "Invalid email or password",

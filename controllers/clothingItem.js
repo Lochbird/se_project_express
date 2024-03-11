@@ -37,16 +37,14 @@ const getItems = (req, res) => {
 
 const deleteItem = (req, res) => {
   const { itemId } = req.params;
-  const userId = req.user._id;
-
   clothingItem
     .findById(itemId)
     .orFail()
     .then((item) => {
-      if (String(item.owner) !== userId) {
+      if (String(item.owner) !== String(req.user._id)) {
         throw new Error("User not authorized to delete item");
       }
-      return item.deleteOne();
+      return item.remove();
     })
     .then(() => res.status(200).send({ message: "Item deleted" }))
     .catch((err) => {
@@ -73,8 +71,6 @@ const deleteItem = (req, res) => {
 const likeItem = (req, res) => {
   const { itemId } = req.params;
   const userId = req.user._id;
-  console.log(userId);
-  console.log(itemId);
 
   clothingItem
     .findByIdAndUpdate(itemId, { $addToSet: { likes: userId } }, { new: true })
