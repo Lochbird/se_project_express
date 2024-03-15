@@ -133,7 +133,6 @@ const getUserById = (req, res) => {
 const updateProfile = (req, res) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
-  console.log(userId);
 
   User.findByIdAndUpdate(userId, [name, avatar], {
     $set: { name, avatar },
@@ -175,17 +174,14 @@ const updateProfile = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
-  console.log("login", email, password);
 
   if (!email || !password) {
-    console.log("ran");
     return res.status(ValidationError).send({
       message: "Enter an email or password",
     });
   }
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      console.log(user);
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
