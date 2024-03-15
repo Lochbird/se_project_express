@@ -18,7 +18,7 @@ const getUsers = (req, res) => {
     .catch((err) => {
       console.error(err);
       res.status(InternalServerError).send({
-        message: err.message,
+        message: "An error has occurred on the server",
       });
     });
 };
@@ -99,7 +99,7 @@ const createUser = (req, res) => {
         });
       }
       return res.status(InternalServerError).send({
-        message: err.message,
+        message: "An error has occurred on the server",
       });
     });
 };
@@ -132,20 +132,26 @@ const getUserById = (req, res) => {
 
 const updateProfile = (req, res) => {
   const userId = req.user._id;
+  const { name, avatar } = req.body;
+  console.log(userId);
 
-  User.findById(userId)
+  User.findByIdAndUpdate(userId, [name, avatar], {
+    $set: { name, avatar },
+    new: true,
+    runValidators: true,
+  })
     .orFail()
-    .then((user) => {
-      if (!user) throw new Error("User not found");
-      return user.save();
-    })
+    // .then((user) => {
+    //   if (!user) throw new Error("User not found");
+    //   return user.save();
+    // })
     .catch((err) => {
       console.error(err);
-      if (err.message === "User not found") {
-        return res.status(NotFoundError).send({
-          message: `User not found with id ${userId}`,
-        });
-      }
+      // if (err.message === "User not found") {
+      //   return res.status(NotFoundError).send({
+      //     message: `User not found with id ${userId}`,
+      //   });
+      // }
       if (err.name === "DocumentNotFoundError") {
         return res.status(NotFoundError).send({
           message: `User not found with id ${userId}`,
@@ -172,6 +178,7 @@ const login = (req, res) => {
   console.log("login", email, password);
 
   if (!email || !password) {
+    console.log("ran");
     return res.status(ValidationError).send({
       message: "Enter an email or password",
     });
@@ -191,13 +198,13 @@ const login = (req, res) => {
           message: "Invalid email or password",
         });
       }
-      if (err.name === "UnauthorizedError") {
-        return res.status(UnauthorizedError).send({
-          message: "Invalid email or password",
-        });
-      }
+      // if (err.name === "Incorrect email or password") {
+      //   return res.status(UnauthorizedError).send({
+      //     message: "Invalid email or password",
+      //   });
+      // }
       return res.status(InternalServerError).send({
-        message: "Error logging in",
+        message: "An error has occurred on the server",
       });
     });
 };
