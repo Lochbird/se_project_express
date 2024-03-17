@@ -134,11 +134,15 @@ const updateProfile = (req, res) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
 
-  User.findByIdAndUpdate(userId, [name, avatar], {
-    $set: { name, avatar },
-    new: true,
-    runValidators: true,
-  })
+  User.findByIdAndUpdate(
+    userId,
+    { name, avatar },
+    {
+      $set: { name, avatar },
+      new: true,
+      runValidators: true,
+    },
+  )
     .orFail()
     // .then((user) => {
     //   if (!user) throw new Error("User not found");
@@ -189,16 +193,16 @@ const login = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(ValidationError).send({
-          message: "Invalid email or password",
-        });
-      }
-      // if (err.name === "Incorrect email or password") {
-      //   return res.status(UnauthorizedError).send({
+      // if (err.name === "DocumentNotFoundError") {
+      //   return res.status(ValidationError).send({
       //     message: "Invalid email or password",
       //   });
       // }
+      if (err.message === "Incorrect email or password") {
+        return res.status(UnauthorizedError).send({
+          message: "Invalid email or password",
+        });
+      }
       return res.status(InternalServerError).send({
         message: "An error has occurred on the server",
       });
