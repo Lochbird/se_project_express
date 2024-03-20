@@ -138,16 +138,14 @@ const updateProfile = (req, res) => {
     userId,
     { name, avatar },
     {
-      $set: { name, avatar },
       new: true,
       runValidators: true,
     },
   )
     .orFail()
-    // .then((user) => {
-    //   if (!user) throw new Error("User not found");
-    //   return user.save();
-    // })
+    .then((user) => {
+      res.status(200).send(user);
+    })
     .catch((err) => {
       console.error(err);
       // if (err.message === "User not found") {
