@@ -69,6 +69,7 @@ const deleteItem = (req, res) => {
 };
 
 const likeItem = (req, res) => {
+  console.log("likeItem called");
   const { itemId } = req.params;
   const userId = req.user._id;
 

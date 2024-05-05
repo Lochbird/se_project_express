@@ -176,6 +176,7 @@ const updateProfile = (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
+  console.log("email: ", email, "password: ", password);
 
   if (!email || !password) {
     return res.status(ValidationError).send({
